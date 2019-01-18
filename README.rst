@@ -39,6 +39,8 @@ Dependencies
 ------------
 
 The "deps/" folder containts JavaScript dependencies utilized by this project.
+The license for the JELLYbean package does not apply to dependencies, most of
+which have their own licenses in comment sections.
 
 Source
 ------
@@ -108,8 +110,14 @@ I'm just a humble aerospace engineer, who knows *just* enough about computer
 science to a) think he knows what he's doing, and b) therefore be potentially
 dangerous. Caveat user.
 
-First: The package license does not apply to dependencies (modules in the
-"deps/" folder), most of which have their own licenses in comment sections.
+First: Yes, this isn't a "true" compiler in the sense that it does not generate
+instructions in the form of object, byte, or assembly. The final output is an
+AST, because a) I wanted to keep langauge specification static (i.e., not to
+require evaluation behavior, to keep specifications in flat text files), and b)
+I want to keep the underlying code flexible to apply across a number of domains
+and languages. Generating instructions from the resulting AST is "simply" (ha
+ha) a matter of "walking" the tree to perform each operation against a managed
+context. I might explore this more in a future iteration or seperate tool.
 
 Second: This isn't perfect. Keep in mind that the original objective was simply
 to teach this damned fool how to write a basic compiler. In particular, I know

@@ -3,29 +3,29 @@
    interface elements for stepping through lexing/parsing.
 */
 
-require(["../deps/qudom", "../deps/quajax", "Terminal", "Rule", "Input", "Lexer", "Parser", "AstNode"], function(qudom, quajax, Terminal, Rule, Input, Lexer, Parser, AstNode) {
+require(["lib/quajax-v1.0.0", "jellybean-v1.0.0"], function(quajax, jellybean) {
     // Load, render terminals
     terminals = [];
-    quajax.load("data/terminals.csv", function(csvText) {
-        terminals = Terminal.fromCsv(csvText);
-        window.document.querySelector("#terminals").appendChild(Terminal.render(terminals));
+    quajax.get("data/terminals.csv", function(csvText) {
+        terminals = jellybean.Terminal.fromCsv(csvText);
+        window.document.querySelector("#terminals").appendChild(jellybean.Terminal.render(terminals));
     });
 
     // Load, render rules
     rules = [];
-    quajax.load("data/rules.csv", function(csvText) {
-        rules = Rule.fromCsv(csvText);
-        window.document.querySelector("#rules").appendChild(Rule.render(rules));
+    quajax.get("data/rules.csv", function(csvText) {
+        rules = jellybean.Rule.fromCsv(csvText);
+        window.document.querySelector("#rules").appendChild(jellybean.Rule.render(rules));
     });
 
     // Define, render input
-    input = new Input();
+    input = new jellybean.Input();
     input.set("3 + 5 * \n(10 - \t20)");
     window.document.querySelector("#input").appendChild(input.render());
 
     // Define lexer, global tokens Array, interface hooks
     tokens = [];
-    lexer = new Lexer();
+    lexer = new jellybean.Lexer();
     window.document.querySelector("#lexer").appendChild(lexer.render());
     window.document.querySelector("#lexStepButton").addEventListener("click", function(event) {
         let token = lexer.step(input.get(), terminals);
@@ -40,8 +40,8 @@ require(["../deps/qudom", "../deps/quajax", "Terminal", "Rule", "Input", "Lexer"
     });
 
     // Define AST (top-level stack node), parser, interface hooks
-    ast = new AstNode();
-    parser = new Parser();
+    ast = new jellybean.AstNode();
+    parser = new jellybean.Parser();
     window.document.querySelector("#parser").appendChild(parser.render());
     window.document.querySelector("#parseStepButton").addEventListener("click", function(event) {
         ast = parser.step(ast, tokens, rules);

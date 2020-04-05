@@ -1,0 +1,17 @@
+<table>
+    <thead>
+        <tr>
+            {{#each headers}}
+                <th>{{this}}</th>
+            {{/each}}
+        </tr>
+    </thead>
+    <tbody>
+        {{#each terminals}}
+            <tr>
+                <td>{{tag}}</td>
+                <td>{{pattern}}</td>
+            </tr>
+        {{/each}}
+    </tbody>
+</table>

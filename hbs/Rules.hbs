@@ -1,0 +1,21 @@
+<table>
+    <thead>
+        <tr>
+            {{#each headers}}
+                <th>{{this}}</th>
+            {{/each}}
+        </tr>
+    </thead>
+    <tbody>
+        {{#each rules}}
+            {{#each sequences}}
+                <tr>
+                    <td>
+                        {{#if @first}}{{../tag}}{{/if}}
+                    </td>
+                    <td>{{#each this}}{{this}} {{/each}}</td>
+                </tr>
+            {{/each}}
+        {{/each}}
+    </tbody>
+</table>

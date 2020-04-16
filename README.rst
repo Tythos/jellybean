@@ -15,6 +15,29 @@ formalized tools across interpreter targets.
 
 .. contents::
 
+Update
+------
+
+A v2 has now been released! This includes:
+
+* Completely re-written parser logic based on a substantially more robust (and
+  formally proof-backed) LR(1) algorithm.
+
+* Single-file module specification
+
+* Straight-from-CSV models (via Papaparse or csvloader plugin for RequireJS)
+  for terminals and rules.
+
+* Much faster/more independent error and debugging reports.
+
+* Unnecessary models (input, tables, etc.) have been removed, as has rendering
+  (and therefore Handlebars requirements).
+
+However, this is not the version used by the front-facing web page, mainly
+because the final item above discourages detailed visualization. But if you
+don't need to manually inspect and verify each step of the parsing process,
+I'd recommend you jump straight to the new (v2.0.0) version.
+
 Specification
 -------------
 

@@ -19,7 +19,7 @@ define(function(require, exports, module) {
          * Returns true if the given element is in the current set.
          * 
          * @param {*} element 
-         * @returns {Boolean} Indicates if the given element is in the current set.
+         * @returns {Boolean} - Indicates if the given element is in the current set.
          */
         contains(element) {
             return 0 <= this.elements.indexOf(element);
@@ -70,12 +70,64 @@ define(function(require, exports, module) {
         /**
          * Returns a deep copy of the current set.
          * 
-         * @returns {Set} Deep copy of the current set.
+         * @returns {Set} - Deep copy of the current set.
          */
         copy() {
             let ns = new Set();
             ns.elements = JSON.parse(JSON.stringify(this.elements));
             return ns;
+        }
+
+        /**
+         * Compares this Set to another Set. Returns true if they have
+         * identical size and contents. Uses "contains()" method for element
+         * comparison (no explicit equality comparison made in this method).
+         * 
+         * @param {Set} rhs   - RHS of equality comparison
+         * @returns {Boolean} - Returns true if Sets are identical
+         */
+        isEqual(rhs) {
+            if (this.getSize() != rhs.getSize()) {
+                return false;
+            }
+            this.elements.forEach(function(el) {
+                if (!rhs.contains(el)) {
+                    return false;
+                }
+            });
+            return true;
+        }
+
+        /**
+         * Constructs a union of two sets: the callee and the given RHS
+         * operand. Callee remains unchanged by this operation.
+         * 
+         * @param {Set} rhs - RHS of union operation
+         * @returns {Set}   - Union of callee and RHS operand
+         */
+        union(rhs) {
+            let result = this.copy();
+            rhs.forEach(function(el) {
+                result.push(el);
+            });
+            return result;
+        }
+
+        /**
+         * Constructs the intersection of two sets: the callee and the given
+         * RHS operand. Callee remains unchanged by this operation.
+         * 
+         * @param {Set} rhs - RHS of intersect operation
+         * @returns {Set}   - Intersection of callee and given operand
+         */
+        intersect(rhs) {
+            let result = new Set();
+            this.elements.forEach(function(el) {
+                if (rhs.contains(el)) {
+                    result.push(el);
+                }
+            });
+            return result;
         }
     }
 

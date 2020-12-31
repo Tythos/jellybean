@@ -16,6 +16,8 @@ define(function(require, exports, module) {
         constructor() {
             this.nStates = 0;
             this.transitions = []; // triplet of "from index", "to index", "transition condition"
+            this.startingState = null; // must be explicitly assigned, as initially there are no states
+            this.acceptingStates = new Set(); // set of indices for accepting states (initially empty)
         }
 
         /**
@@ -51,8 +53,8 @@ define(function(require, exports, module) {
          * Returns subset of edges (Array of triplets) originating from the
          * given state index.
          * 
-         * @param {Number} fromIndex Index (number) of "from" state
-         * @returns {Array} Array of three-element Arrays, each of which contains a triplet of "from", "to", "transition" edges
+         * @param {Number} fromIndex - Index (number) of "from" state
+         * @returns {Array}          - Array of three-element Arrays, each of which contains a triplet of "from", "to", "transition" edges
          */
         getEdgesFrom(fromIndex) {
             let subset = [];
@@ -62,6 +64,41 @@ define(function(require, exports, module) {
                 }
             });
             return subset;
+        }
+
+        /**
+         * Determines destination states reachable from given state (index) by
+         * transition condition. Unlike getEdgesFrom(), this determines a set
+         * of destination state indices, since we already constrain source and
+         * transition condition.
+         * 
+         * @param {Number} fromIndex                - Index of state from which transition occurs
+         * @param {String|null} transitionCondition - Transition condition of edges to consider
+         * @returns {Set}                           - Set of states (indices) reachable from given state by transition condition
+         */
+        getEdgesBy(fromIndex, transitionCondition) {
+            let subset = new Set();
+            this.transitions.forEach(function(edge) {
+                if (edge[0] == fromIndex && edge[2] == transitionCondition) {
+                    subset.push(edge[1]);
+                }
+            });
+            return subset;
+        }
+
+        /**
+         * Constructs a set of all non-epsilon transition conditions.
+         * 
+         * @returns {Set} - The NFA's alphabet, as determined by current edges.
+         */
+        getAlphabet() {
+            let alphabet = new Set();
+            this.transitions.forEach(function(edge) {
+                if (edge[2] != null) {
+                    alphabet.push(edge[2]);
+                }
+            });
+            return alphabet;
         }
 
         /**
@@ -75,7 +112,6 @@ define(function(require, exports, module) {
             let nextState_ndx = 0; // index of state within Set to inspect next
             let closure = states.copy();
             while (nextState_ndx < closure.getSize()) {
-                console.log(closure.elements);
                 let nextState = closure.elements[nextState_ndx];
                 let edges = this.getEdgesFrom(nextState);
                 edges.forEach(function(edge) {

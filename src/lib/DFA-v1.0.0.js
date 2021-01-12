@@ -6,6 +6,9 @@ define(function(require, exports, module) {
     let NFA = require("lib/NFA-v1.0.0");
     let Set = require("lib/Set-v1.0.0");
 
+    /**
+     * Models a deterministic finite automota. Specific states are implicit.
+     */
     class DFA {
         constructor() {
             this.nStates = 0;
@@ -14,6 +17,27 @@ define(function(require, exports, module) {
             this.acceptingStates = [];
         }
 
+        /**
+         * Returns a Set containing the alphabet for this DFA (e.g., unique
+         * transition conditions across all edges).
+         * 
+         * @returns {Set} - Alphabet (Set) containing all unique transition conditions
+         */
+        getAlphabet() {
+            let alphabet = new Set();
+            this.transitions.forEach(function(transition) {
+                alphabet.push(transition[2]);
+            });
+            return alphabet;
+        }
+
+        /**
+         * Uses subset construction to define (populate) a new DFA equivalent
+         * of the NFA passed into the method.
+         * 
+         * @param {NFA} nfa - Non-deterministic finite automota from which a new DFA will be constructed
+         * @returns {Array} - "Map" of DFA states (by index) to the old NFA states they represent (as Array of NFA indices)
+         */
         fromSubsetConstruction(nfa) {
             let alphabet = nfa.getAlphabet();
 
@@ -77,7 +101,49 @@ define(function(require, exports, module) {
             // return map of NFA-DFA states to support debugging and other post-construction operations
             return ndMap;
         }
+
+        /**
+         * Returns a set of indices defining the current states of the DFA,
+         * based on the nStates property.
+         * 
+         * @returns {Set} - Set expression of current states of the DFA (Number values)
+         */
+        getStates() {
+            return new Set(new Array(this.nStates).fill(null).map(function(_, i) {
+                return i;
+            }));
+        }
+
+        /**
+         * Constructs a new DFA that is a minimized equivalent to the current DFA. Much like
+         * "fromSubsetContruction()" method, returns a mapping of new states to old states.
+         * 
+         * @param {DFA} dfa  - Potentially non-minimized DFA
+         * @returns {Array}  - "Map" (Array) of non-minimized state indices to (by entry index) minimized DFA states
+         */
+        fromDfaMinimization(dfa) {
+            let min = new DFA();
+            let F = this.acceptingStates.copy();
+            let SF = this.getStates().subtract(F);
+            let groups = [F, SF]; // model groups as Sets of states (indices), which will transition well into new DFA definition
+            let checking_ndx = 1;
+            let alphabet = this.getAlphabet();
+
+            while (checking_ndx < groups.length) {
+                // is current group "consistent"? a group is "consistent" if all constituent stats have identical transitions for each member of the alphabet.
+                alphabet.forEach(function(tc) {
+
+                });
+                checking_ndx += 1;
+            }
+
+            // assign DFA attributes from construction
+
+            // return "map" of new states to old states--which we already have! It's the "groups" array.
+            return groups;
+        }
     }
+
 
     return Object.assign(DFA, {
         "__url__": "",

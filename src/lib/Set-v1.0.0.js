@@ -129,6 +129,23 @@ define(function(require, exports, module) {
             });
             return result;
         }
+
+        /**
+         * Returns a new Set whose elements are the members of this set that
+         * ARE NOT also elements of the given RHS operand.
+         * 
+         * @param {Set} rhs - RHS of subtraction operation
+         * @returns {Set}   - New set resulting from subtraction operation
+         */
+        subtract(rhs) {
+            let result = new Set();
+            this.elements.forEach(function(el) {
+                if (!rhs.contains(el)) {
+                    result.push(el);
+                }
+            });
+            return result;
+        }
     }
 
     return Object.assign(Set, {

@@ -2,7 +2,7 @@
  * 
  */
 
-require(["lib/Set-v1.0.0", "lib/NFA-v1.0.0", "lib/DFA-v1.0.0"], function(Set, NFA, DFA) {
+require(["Set", "NFA", "DFA"], function(Set, NFA, DFA) {
     // 2.6.1
     let nfa = new NFA();
     nfa.addEdges([
@@ -26,7 +26,29 @@ require(["lib/Set-v1.0.0", "lib/NFA-v1.0.0", "lib/DFA-v1.0.0"], function(Set, NF
     console.log("DFA edges:", dfa.transitions);
     console.log("DFA/NFA map:", ndMap.map(function(set) { return set.elements.sort(); }));
 
+    // 2.8.1
+    let dfa2 = new DFA();
+    dfa2.addEdges([
+        [0, 1, "a"],
+        [1, 2, "b"],
+        [2, 3, "a"],
+        [3, 1, "b"],
+        [1, 4, "a"],
+        [2, 5, "b"],
+        [5, 2, "b"],
+        [4, 5, "b"],
+        [4, 6, "a"],
+        [6, 5, "a"],
+        [5, 7, "a"],
+        [7, 5, "b"],
+        [7, 0, "a"]
+    ]);
+    dfa.startingState = 0;
+    dfa.acceptingStates.push(0);
+    dfa.acceptingStates.push(6);
+
     // assign globals for debugging
     window.nfa = nfa;
     window.dfa = dfa;
+    window.dfa2 = dfa2;
 });

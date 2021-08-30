@@ -151,6 +151,7 @@ define(function(require, exports, module) {
     return Object.assign(Set, {
         "__url__": "",
         "__license__": "MIT",
-        "__semver__": "1.0.0"
+        "__semver__": "1.0.0",
+        "__deps__": {}
     });
 });

@@ -3,7 +3,7 @@
  */
 
 define(function(require, exports, module) {
-    let Set = require("lib/Set-v1.0.0");
+    let Set = require("Set");
 
     /**
      * Encapsulation of a non-deterministic finite automota. Does not model
@@ -128,6 +128,7 @@ define(function(require, exports, module) {
     return Object.assign(NFA, {
         "__url__": "",
         "__license__": "MIT",
-        "__semver__": "1.0.0"
+        "__semver__": "1.0.0",
+        "__deps__": {}
     });
 });

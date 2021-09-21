@@ -63,8 +63,12 @@ define(function(require, exports, module) {
          * 
          * @param {Function} callback 
          */
-        forEach(callback) {
-            this.elements.forEach(callback);
+        forEach(callback, thisArg=null) {
+            if (thisArg == null) {
+                this.elements.forEach(callback);
+            } else {
+                this.elements.forEach(callback.bind(thisArg));
+            }
         }
 
         /**
@@ -145,6 +149,10 @@ define(function(require, exports, module) {
                 }
             });
             return result;
+        }
+
+        toString() {
+            return `{ ${this.elements.map(function(e) { return e.toString(); }).join(", ")} }`;
         }
     }
 

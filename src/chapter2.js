@@ -18,16 +18,17 @@ require(["Set", "NFA", "DFA"], function(Set, NFA, DFA) {
     ]);
     nfa.startingState = 1;
     nfa.acceptingStates.push(4);
-    console.log(nfa.getEpsilonClosure(new Set([1])));
+    //console.log(nfa.getEpsilonClosure(new Set([1])));
 
     // 2.6.2
     let dfa = new DFA();
     let ndMap = dfa.fromSubsetConstruction(nfa);
-    console.log("DFA edges:", dfa.transitions);
-    console.log("DFA/NFA map:", ndMap.map(function(set) { return set.elements.sort(); }));
+    //console.log("DFA edges:", dfa.transitions);
+    //console.log("DFA/NFA map:", ndMap.map(function(set) { return set.elements.sort(); }));
 
     // 2.8.1
     let dfa2 = new DFA();
+    window.dfa2 = dfa2;
     dfa2.addEdges([
         [0, 1, "a"],
         [1, 2, "b"],
@@ -43,12 +44,19 @@ require(["Set", "NFA", "DFA"], function(Set, NFA, DFA) {
         [7, 5, "b"],
         [7, 0, "a"]
     ]);
-    dfa.startingState = 0;
-    dfa.acceptingStates.push(0);
-    dfa.acceptingStates.push(6);
+    dfa2.startingState = 0;
+    dfa2.acceptingStates.push(0);
+    dfa2.acceptingStates.push(6);
+    let dfa3 = new DFA();
+    let minMap = dfa3.fromDfaMinimization(dfa2);
+    console.log(minMap);
+    //console.log("DFA-max edges:", dfa2.transitions);
+    //console.log("DFA-min edges:", dfa3.transitions);
+    //console.log("min/max map:", minMap);
 
     // assign globals for debugging
     window.nfa = nfa;
     window.dfa = dfa;
     window.dfa2 = dfa2;
+    window.dfa3 = dfa3;
 });

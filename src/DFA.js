@@ -14,7 +14,7 @@ define(function(require, exports, module) {
             this.nStates = 0;
             this.transitions = [];
             this.startingState = null;
-            this.acceptingStates = [];
+            this.acceptingStates = new Set();
         }
 
         /**
@@ -26,10 +26,10 @@ define(function(require, exports, module) {
             edges.forEach(function(edge) {
                 this.transitions.push(edge);
                 if (this.nStates <= edge[0]) {
-                    this.nStates = edge[0] - 1;
+                    this.nStates = edge[0] + 1;
                 }
                 if (this.nStates <= edge[1]) {
-                    this.nstates = edge[1] - 1;
+                    this.nstates = edge[1] + 1;
                 }
             }, this);
         }
@@ -199,56 +199,190 @@ define(function(require, exports, module) {
          * @returns {Array}  - "Map" (Array) of non-minimized state indices to (by entry index) minimized DFA states
          */
         fromDfaMinimization(dfa) {
-            let F = this.acceptingStates.copy();
-            let SF = this.getStates().subtract(F);
-            let groups = [F, SF]; // model groups as Sets of states (indices), which will transition well into new DFA definition
-            let checking_ndx = 1;
-            let alphabet = this.getAlphabet();
+            let F = dfa.acceptingStates.copy();
+            let SF = dfa.getStates().subtract(F);
+            let groups = [new Set(), F, SF]; // model groups as Sets of states (indices), which will transition well into new DFA definition (G0=first set, etc.; entries can be null if later broken up)
+            let checking_ndx = 0;
+            let alphabet = dfa.getAlphabet();
 
             while (checking_ndx < groups.length) {
+                // debugging report
+                console.log("group definitions:");
+                groups.forEach(function(g, n) {
+                    console.log(`G${n}: ${g.toString()}`);
+                });
+
+                // first verify we're not re-checking a broken-up group
+                if (groups[checking_ndx] == null) {
+                    checking_ndx += 1;
+                    continue;
+                }
+
                 // transition table tracks group destination for each group member (first index) and transition character (second index)
-                let nMembers = groups[checking_ndx].getSize();
-                let nTransitions = alphabet.length;
-                let tt = new Array(nMembers).fill(null).map(function(row) {
-                    return new Array(nTransitions).fill(null);
-                });
-    
-                // is current group "consistent"? a group is "consistent" if all constituent stats have identical transitions (destination groups) for each member of the alphabet.
-                alphabet.forEach(function(tc, j) {
-                    groups[checking_ndx].forEach(function(from, i) {
-                        // if there is a transition, to which group does it lead?
-                        let dest = this.getEdgesBy(from, tc);
-                        let group = null;
-                        if (dest != null) {
-                            group = this.getGroupMembership(groups, dest);
-                        }
-                        tt[i][j] = group;
-                    });
-                });
+                let tt = this.buildTransitionTable(groups, checking_ndx, alphabet, dfa);
 
                 // continue if consistent
                 let isConsistent = this.checkGroupConsistency(tt);
                 if (!isConsistent) {
-                    // determine maximal subsets
+                    // an inconsistent group means we break old group into a set of new groups, using unique Group destination indices from the transition table
+                    let subcheck_ndx = 0;
+                    while (subcheck_ndx < tt.length) {
+                        // skip if we've already broken this row out from a previous grouping
+                        if (tt[subcheck_ndx] == null) {
+                            subcheck_ndx += 1;
+                            continue;
+                        }
 
-                    // expand with subsets
+                        // first, define the "potentially-new group" with 
+                        let newGroup = [ groups[checking_ndx].elements[subcheck_ndx] ]; // group is defined by subset of OLD DFA state indices
+                        let transitions = tt[subcheck_ndx]; // "bookmark" for comparison with other tt rows
+                        tt[subcheck_ndx] = null; // when we move a state into a new group, we flag it moved by marking the transition table null
 
-                    // make this group empty
+                        // what other (subsequent) transition table rows have the same group destinations?
+                        let subsubcheck_ndx = subcheck_ndx + 1;
+                        while (subsubcheck_ndx < tt.length) {
+                            // skip if already broken out by previously-parsed new grouping
+                            if (tt[subsubcheck_ndx] == null) {
+                                subsubcheck_ndx += 1;
+                                continue;
+                            }
+
+                            // compare tt[subsubcheck_ndx] against dests
+                            let isIdentical = this.isGroupedTransition(tt, transitions, subsubcheck_ndx);
+                            if (isIdentical) {
+                                // "add" to group by moving original DFA state index and setting transition-table entry to null
+                                newGroup.push(groups[checking_ndx].elements[subsubcheck_ndx]);
+                                tt[subsubcheck_ndx] = null;
+                            }
+                            subsubcheck_ndx += 1;
+                        }
+
+                        // we now have a "new" group--likely one of several; add it to the groups list (will recompute transition table on subsequent iteration)
+                        groups.push(new Set(newGroup));
+                        subcheck_ndx += 1;
+                    }
+
+                    // mark "old" group as empty (null), as all should have been broken into new groups (verify?); we must also regenerate transition table, so basically start over from the beginning
+                    groups[checking_ndx] = new Set();
+                    checking_ndx = 0;
+                } else {
+                    // "safe" to continue checking next reduced-DFA group
+                    checking_ndx += 1;
                 }
-                checking_ndx += 1;
             }
 
-            // assign DFA attributes from construction
+            // assign number of states (some will be empty)
+            this.nStates = groups.length;
 
-            // return "map" of new states to old states--which we already have! It's the "groups" array.
-            return groups;
+            // recompute transition tables one last time to define edges
+            this.transitions = [];
+            groups.forEach(function(group, i) {
+                // transitions are edges; each edge is a three-element Array listing "from" index, "to" index, and transition condition.
+                if (group.getSize() == 0) { return; }
+                let tt = this.buildTransitionTable(groups, i, alphabet, dfa);
+                //console.log(this.ttToString(tt, alphabet, i, groups));
+
+                // each transition table should, by virtue of construction, be self-consistent, so we only need the first row
+                alphabet.forEach(function(ab, j) {
+                    if (tt[0][j] != null) {
+                        this.transitions.push([
+                            i, // from new DFA state index
+                            tt[0][j], // to new DFA state index
+                            ab
+                        ]);
+                    }
+                }, this);
+            }, this);
+
+            // new starting state contains old starting state
+            this.startingState = null;
+            groups.forEach(function(group, i) {
+                if (group.contains(dfa.startingState)) {
+                    this.startingState = i;
+                }
+            }, this);
+            if (this.startingState == null) {
+                console.error("Unable to map/resolve new DFA starting state");
+            }
+            
+            // new accepting states are those that contain "old" accepting states
+            this.acceptingStates = new Set();
+            groups.forEach(function(group, i) {
+                group.forEach(function(oldNdx) {
+                    if (dfa.acceptingStates.contains(oldNdx)) {
+                        this.acceptingStates.push(i);
+                    }
+                }, this);
+            }, this);
+
+            // return "map" of new states to old states, which we can resolve easily from the "groups" Array
+            let map = [];
+            groups.forEach(function(group) {
+                map.push(group.elements);
+            });
+            return map;
+        }
+
+        /**
+         * Constructs a transition table for the given group.
+         * 
+         * @param {Array} groups - Each group in this array is a Set of state indices (old DFA) mapped to the new DFA group
+         * @param {Number} checking_ndx - Which entry in groups we are constructing a transition table for
+         * @param {Array} alphabet - Array of all possible transition symbols (typically strings)
+         * @param {DFA} dfa - "Old" DFA (since this construction is typically used in subset minimization)
+         * @returns {Array} - Transition table is technically an array of arrays; first "dimension" is indexed by the "old" DFA states listed in groups; second "dimension" is each character in the transition alphabet; values are indices of (new DFA) group membership
+         */
+        buildTransitionTable(groups, checking_ndx, alphabet, dfa) {
+            let nMembers = groups[checking_ndx].getSize();
+            let nTransitions = alphabet.getSize();
+            let tt = new Array(nMembers).fill(null).map(function(row) {
+                // each entry in the transition table (as indexed by members in the group we are currently checking); we will populate these contents in the next step, but here we assign "null" placeholders
+                return new Array(nTransitions).fill(null);
+            });
+
+            // is current group "consistent"? a group is "consistent" if all constituent stats have identical transitions (destination groups) for each member of the alphabet. so, first we must determine the transition destinations (and groups to which they belong).
+            groups[checking_ndx].forEach(function(from, i) {
+                alphabet.forEach(function(tc, j) {
+                    // if there is a transition, to which group does it lead?
+                    let dest = dfa.getEdgesBy(from, tc);
+                    let group = null;
+                    if (dest != null) {
+                        // if there is a destination, we need the index of the group to which this destination belongs
+                        group = this.getGroupMembership(groups, dest);
+                    }
+                    tt[i][j] = group;
+                }, this);
+            }, this);
+            //console.log(this.ttToString(tt, alphabet, checking_ndx, groups));            
+            return tt;
+        }
+
+        /**
+         * Returns true if the transition table has identical destinations for
+         * each transition of the given members (rows). Primarily used as a
+         * helper function (could be static) in DFA minimization.
+         * 
+         * @param {Array} tt - Transition table is array of arrays (first index is row, second is transition); specific values are indices in current groups, but only compared against each other
+         * @param {Array} newGroup - Indices of destination states defined in new group for each alphabet character (e.g., old row of transition table)
+         * @param {Number} m2_ndx - Index of second row to compare
+         * @returns {Boolean} - True if each transitions for the two rows goes to an identical destination
+         */
+        isGroupedTransition(tt, newGroup, m2_ndx) {
+            let nTransitions = newGroup.length;
+            for (let i = 0; i < nTransitions; i++) {
+                if (newGroup[i] != tt[m2_ndx][i]) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /**
          * Given an Array of groups (Set of state indices), returns index of
          * group in which the given state is a member. Raises an error if no
          * group membership can be found. Primarily used as a helper method for
-         * DFA minimization.
+         * DFA minimization. Technically this could be a static method as it is
+         * used in minization-construction and does not use the instance state.
          * 
          * @param {Array} groups - Array of Sets; each Set contains state indices for that group
          * @param {Number} state - Index of state in question
@@ -261,6 +395,20 @@ define(function(require, exports, module) {
                 }
             }
             console.error(`State ${state} is not a member of given groups`);
+        }
+
+        ttToString(tt, alphabet, checking_ndx, groups) {
+            let lines = [];
+            lines.push(`Transition table for group G${checking_ndx}:`);
+            lines.push(`\t${alphabet.elements.join("\t")}`);
+            tt.forEach(function(row, i) {
+                // if row has been set to null, this transition has already been "extracted" to another group and we should skip
+                if (row == null) { return; }
+                lines.push(`${groups[checking_ndx].elements[i]}\t${row.map(function(g, j) {
+                    return g == null ? "-" : `G${g}`;
+                }).join("\t")}`);
+            });
+            return lines.join("\n");
         }
     }
 

@@ -51,7 +51,7 @@ require(["Set", "NFA", "DFA"], function(Set, NFA, DFA) {
     let minMap = dfa3.fromDfaMinimization(dfa2);
     console.log(minMap);
     //console.log("DFA-max edges:", dfa2.transitions);
-    //console.log("DFA-min edges:", dfa3.transitions);
+    console.log("DFA-min edges:", dfa3.transitions);
     //console.log("min/max map:", minMap);
 
     // assign globals for debugging

@@ -207,9 +207,9 @@ define(function(require, exports, module) {
 
             while (checking_ndx < groups.length) {
                 // debugging report
-                console.log("group definitions:");
+                //console.log("group definitions:");
                 groups.forEach(function(g, n) {
-                    console.log(`G${n}: ${g.toString()}`);
+                    //console.log(`G${n}: ${g.toString()}`);
                 });
 
                 // first verify we're not re-checking a broken-up group

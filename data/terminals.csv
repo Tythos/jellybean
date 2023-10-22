@@ -1,0 +1,10 @@
+tag,pattern
+NUMBER,\d+
+PLUS,\+
+MINUS,\-
+TIMES,\*
+DIVIDE,\/
+LPAREN,\(
+RPAREN,\)
+WHITESPACE,[ \t]+
+NEWLINE,\n

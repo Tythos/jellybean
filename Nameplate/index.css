@@ -1,0 +1,22 @@
+.Nameplate {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 16px;
+    padding: 16px;
+    border: 1px solid #eee;
+    color: #eee;
+}
+
+.NameplateName {
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.NameplateName:hover {
+    opacity: 0.5;
+}
+
+.NameplateAge {
+    opacity: 0.5;
+}

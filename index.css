@@ -32,3 +32,7 @@ body {
 .Greeting:hover {
     opacity: 0.5;
 }
+
+.VertWrap {
+    display: block;
+}
